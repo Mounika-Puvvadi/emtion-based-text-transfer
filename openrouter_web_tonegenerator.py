@@ -35,6 +35,59 @@ description = f"""
   <div>
     <p>Transform your text into any tone using the OpenRouter API. Type any emotion or tone and paste your text to get started!</p>
     <p><small>This service is rate-limited to {MAX_REQUESTS_PER_MINUTE} requests per minute and {MAX_REQUESTS_PER_DAY} requests per day.</small></p>
+    custom_css = """
+body {
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+}
+
+/* Main container */
+.gradio-container {
+    max-width: 900px !important;
+    margin: auto !important;
+    padding: 25px !important;
+    font-family: "Segoe UI", sans-serif;
+}
+
+/* App title */
+h1, h2 {
+    text-align: center;
+    color: #ffffff;
+}
+
+/* Textbox styling */
+textarea {
+    border-radius: 12px !important;
+    border: 1px solid #4a90e2 !important;
+    font-size: 15px !important;
+    padding: 12px !important;
+}
+
+/* Output box */
+.output-text {
+    background-color: #111827 !important;
+    color: #e5e7eb !important;
+}
+
+/* Buttons */
+button {
+    background: linear-gradient(135deg, #667eea, #764ba2) !important;
+    color: white !important;
+    border-radius: 12px !important;
+    padding: 10px 18px !important;
+    font-size: 16px !important;
+    border: none !important;
+}
+
+button:hover {
+    transform: scale(1.03);
+    transition: 0.2s ease-in-out;
+}
+
+/* Footer hide (optional) */
+footer {
+    visibility: hidden;
+}
+"""
   </div>
 </div>
 """
