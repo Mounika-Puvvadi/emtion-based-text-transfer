@@ -1,6 +1,5 @@
 import os
 import requests
-import re
 import gradio as gr
 import time
 from dotenv import load_dotenv
@@ -18,33 +17,29 @@ HEADERS = {
     "X-Title": "OpenRouter Tone Generator",
     "Content-Type": "application/json"
 }
-MODEL = "arcee-ai/trinity-large-preview:free"
+MODEL = "mistralai/mistral-small-3.1-24b-instruct:free"
 
 # Rate limiter settings
 MAX_REQUESTS_PER_MINUTE = 10
 MAX_REQUESTS_PER_DAY = 100
 MINUTE_WINDOW = 60  # seconds
-DAY_WINDOW = 24 * 60 * 60  # seconds (24 hours)
+DAY_WINDOW = 24 * 60 * 60  # seconds
 minute_timestamps = deque()
 day_timestamps = deque()
 rate_limit_lock = Lock()
 
 # Set page title and description
 title = "AI Tone Generator"
-description = """
+description = f"""
 <div style="text-align: center; max-width: 650px; margin: 0 auto;">
   <div>
-    <p>Transform your text into different tones using the Deepseek V3 model via OpenRouter API. Select a tone and paste your text to get started!</p>
-    <p><small>Note: This service is rate-limited to {MAX_REQUESTS_PER_MINUTE} requests per minute and {MAX_REQUESTS_PER_DAY} requests per day.</small></p>
+    <p>Transform your text into any tone using the OpenRouter API. Type any emotion or tone and paste your text to get started!</p>
+    <p><small>This service is rate-limited to {MAX_REQUESTS_PER_MINUTE} requests per minute and {MAX_REQUESTS_PER_DAY} requests per day.</small></p>
   </div>
 </div>
-""".format(
-    MAX_REQUESTS_PER_MINUTE=MAX_REQUESTS_PER_MINUTE,
-    MAX_REQUESTS_PER_DAY=MAX_REQUESTS_PER_DAY
-)
+"""
 
 def is_rate_limited():
-    """Check if the current request would exceed the rate limit"""
     with rate_limit_lock:
         now = time.time()
         
@@ -60,14 +55,13 @@ def is_rate_limited():
         if len(day_timestamps) >= MAX_REQUESTS_PER_DAY:
             return "Daily limit reached. Please try again tomorrow."
         
-        # Add current timestamp to both queues
         minute_timestamps.append(now)
         day_timestamps.append(now)
         return False
 
 def get_tone_description(tone):
-    """Get the description and example for each tone"""
-    tone_descriptions = {
+    """Return a dynamic description for any typed tone."""
+    predefined = {
         "playful": "fun and lighthearted, using casual language and maybe even some wordplay",
         "serious": "formal and grave, emphasizing importance and gravity",
         "formal": "professional and proper, using business etiquette and formal vocabulary",
@@ -79,7 +73,7 @@ def get_tone_description(tone):
         "poetic": "flowery and descriptive, using metaphors and vivid language",
         "technical": "precise and technical, focusing on accuracy and specificity"
     }
-    return tone_descriptions.get(tone, "neutral")
+    return predefined.get(tone.lower(), f"{tone} emotional style")
 
 def generate_tone_variation(text, tone):
     """Generate a tone variation using the OpenRouter API"""
@@ -89,19 +83,16 @@ def generate_tone_variation(text, tone):
         if rate_limit_status:
             return rate_limit_status
         
-        # Get tone description
         tone_style = get_tone_description(tone)
         
-        # Create the system message and user prompt
-        system_message = f"""You are an expert at rewriting text in different tones.
+        # Create system and user prompts
+        system_message = f"""You are expert at rewriting text in different tones.
 Your task is to rewrite the given text in a {tone} tone ({tone_style})."""
 
-        user_prompt = f"""Please rewrite this text in a {tone} tone:
-{text}
+        user_prompt = f"""Rewrite the text below with the emotion '{tone}' clearly expressed:
+Text:
+{text}"""
 
-Make it {tone_style}"""
-
-        # Make API request
         response = requests.post(
             API_URL,
             headers=HEADERS,
@@ -112,18 +103,15 @@ Make it {tone_style}"""
                     {"role": "user", "content": user_prompt}
                 ],
                 "temperature": 0.7,
-                "max_tokens": 1000
+                "max_tokens": 500
             },
             timeout=60
         ).json()
 
-        # Check for errors
         if "error" in response:
             return f"API Error: {response['error']['message']}"
 
-        # Extract and clean the response
-        generated_text = response['choices'][0]['message']['content']
-        return generated_text.strip()
+        return response['choices'][0]['message']['content'].strip()
 
     except Exception as e:
         return f"Error: {str(e)}"
@@ -140,21 +128,10 @@ with gr.Blocks(theme="soft") as demo:
                 placeholder="Type or paste your text here...",
                 lines=5
             )
-            tone_dropdown = gr.Dropdown(
-                choices=[
-                    "playful",
-                    "serious",
-                    "formal",
-                    "casual",
-                    "professional",
-                    "friendly",
-                    "enthusiastic",
-                    "sarcastic",
-                    "poetic",
-                    "technical"
-                ],
-                label="Select tone",
-                value="formal"
+            tone_input = gr.Textbox(
+                label="Enter emotion / tone",
+                placeholder="e.g., happy, sad, romantic, angry, formal, relaxed",
+                lines=1
             )
             generate_btn = gr.Button("Generate Tone Variation")
         
@@ -165,26 +142,24 @@ with gr.Blocks(theme="soft") as demo:
                 interactive=False
             )
     
-    # Example inputs
     gr.Examples(
         examples=[
-            ["The meeting is scheduled for tomorrow at 2 PM.", "casual"],
-            ["I love this new restaurant!", "formal"],
-            ["The project deadline is approaching.", "playful"],
-            ["The weather is beautiful today.", "poetic"],
-            ["Your appointment is on June 1st at 4:30 PM.", "friendly"],
-            ["The system requires 16GB of RAM.", "technical"]
+            ["I missed the bus.", "sad"],
+            ["The assignment is due tomorrow.", "anxious"],
+            ["I love this new cafe!", "happy"],
+            ["This is so boring.", "sarcastic"],
+            ["Let’s celebrate your success!", "joyful"],
+            ["Explain this seriously:", "serious"]
         ],
-        inputs=[text_input, tone_dropdown]
+        inputs=[text_input, tone_input]
     )
     
     generate_btn.click(
         fn=generate_tone_variation,
-        inputs=[text_input, tone_dropdown],
+        inputs=[text_input, tone_input],
         outputs=output
     )
 
 # Launch the app
-if __name__ == "__main__":
-    print("Starting OpenRouter Tone Generator...")
-    demo.launch(share=True)  # Set share=False if you don't want to create a public link 
+if _name_ == "_main_":
+    demo.launch(share=True)
