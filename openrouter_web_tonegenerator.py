@@ -38,6 +38,11 @@ description = f"""
   </div>
 </div>
 """
+custom_css = """
+body {
+    background-color: #f4f6fb;
+}
+"""
 
 def is_rate_limited():
     with rate_limit_lock:
@@ -60,7 +65,6 @@ def is_rate_limited():
         return False
 
 def get_tone_description(tone):
-    """Return a dynamic description for any typed tone."""
     predefined = {
         "playful": "fun and lighthearted, using casual language and maybe even some wordplay",
         "serious": "formal and grave, emphasizing importance and gravity",
@@ -76,16 +80,13 @@ def get_tone_description(tone):
     return predefined.get(tone.lower(), f"{tone} emotional style")
 
 def generate_tone_variation(text, tone):
-    """Generate a tone variation using the OpenRouter API"""
     try:
-        # Check rate limit
         rate_limit_status = is_rate_limited()
         if rate_limit_status:
             return rate_limit_status
         
         tone_style = get_tone_description(tone)
-        
-        # Create system and user prompts
+
         system_message = f"""You are expert at rewriting text in different tones.
 Your task is to rewrite the given text in a {tone} tone ({tone_style})."""
 
@@ -117,7 +118,7 @@ Text:
         return f"Error: {str(e)}"
 
 # Create the Gradio interface
-with gr.Blocks(theme="soft") as demo:
+with gr.Blocks(theme=gr.themes.Soft(), css=custom_css) as demo:
     gr.Markdown(f"# {title}")
     gr.Markdown(description)
     
