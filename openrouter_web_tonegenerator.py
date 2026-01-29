@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from collections import deque
 from threading import Lock
 
-# Load environment variables
+# Load environment variables from .env file
 load_dotenv()
 
 # OpenRouter API configuration
@@ -19,109 +19,79 @@ HEADERS = {
 }
 MODEL = "arcee-ai/trinity-large-preview:free"
 
-# Rate limiter
+# Rate limiter settings
 MAX_REQUESTS_PER_MINUTE = 10
 MAX_REQUESTS_PER_DAY = 100
-MINUTE_WINDOW = 60
-DAY_WINDOW = 24 * 60 * 60
-
+MINUTE_WINDOW = 60  # seconds
+DAY_WINDOW = 24 * 60 * 60  # seconds
 minute_timestamps = deque()
 day_timestamps = deque()
 rate_limit_lock = Lock()
 
-# Page title
+# Set page title and description
 title = "Emotion Based Text Style Transfer"
-
-description = """
-<div style="text-align:center; max-width:650px; margin:auto;">
-<p>Transform your text into any emotion or tone using AI.</p>
-<p><small>Rate limit: 10/min • 100/day</small></p>
+description = f"""
+<div style="text-align: center; max-width: 650px; margin: 0 auto;">
+  <div>
+    <p>Transform your text into any tone using the OpenRouter API. Type any emotion or tone and paste your text to get started!</p>
+    <p><small>This service is rate-limited to {MAX_REQUESTS_PER_MINUTE} requests per minute and {MAX_REQUESTS_PER_DAY} requests per day.</small></p>
+  </div>
 </div>
-"""
-
-# 🔥 CSS DIRECTLY IN BACKEND
-custom_css = """
-body {
-    background: linear-gradient(135deg, #f5f7fa, #e4ebf5);
-    font-family: 'Segoe UI', sans-serif;
-}
-
-.gradio-container {
-    max-width: 900px !important;
-    margin: auto;
-}
-
-h1 {
-    text-align: center;
-    color: #1f2937;
-    font-weight: 600;
-}
-
-.gr-box {
-    background: white !important;
-    border-radius: 14px !important;
-    padding: 20px !important;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-}
-
-label {
-    font-weight: 500;
-    color: #374151;
-}
-
-textarea, input {
-    border-radius: 10px !important;
-    border: 1px solid #d1d5db !important;
-    padding: 12px !important;
-    font-size: 14px !important;
-}
-
-textarea:focus, input:focus {
-    border-color: #2563eb !important;
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
-}
-
-button {
-    background: linear-gradient(90deg, #2563eb, #1d4ed8) !important;
-    color: white !important;
-    border-radius: 10px !important;
-    padding: 12px !important;
-    font-size: 15px !important;
-    font-weight: 500 !important;
-    border: none !important;
-}
-
-button:hover {
-    opacity: 0.9;
-}
 """
 
 def is_rate_limited():
     with rate_limit_lock:
         now = time.time()
-
+        
+        # Check minute limit
         while minute_timestamps and now - minute_timestamps[0] > MINUTE_WINDOW:
             minute_timestamps.popleft()
         if len(minute_timestamps) >= MAX_REQUESTS_PER_MINUTE:
-            return "Rate limit exceeded. Please wait a minute."
-
+            return "Rate limit exceeded. Please wait a minute before trying again."
+        
+        # Check daily limit
         while day_timestamps and now - day_timestamps[0] > DAY_WINDOW:
             day_timestamps.popleft()
         if len(day_timestamps) >= MAX_REQUESTS_PER_DAY:
-            return "Daily limit reached. Try again tomorrow."
-
+            return "Daily limit reached. Please try again tomorrow."
+        
         minute_timestamps.append(now)
         day_timestamps.append(now)
         return False
 
 def get_tone_description(tone):
-    return f"{tone} emotional style"
+    """Return a dynamic description for any typed tone."""
+    predefined = {
+        "playful": "fun and lighthearted, using casual language and maybe even some wordplay",
+        "serious": "formal and grave, emphasizing importance and gravity",
+        "formal": "professional and proper, using business etiquette and formal vocabulary",
+        "casual": "relaxed and informal, like talking to a friend",
+        "professional": "business-appropriate, maintaining clarity and professionalism",
+        "friendly": "warm and approachable, like chatting with a close friend",
+        "enthusiastic": "energetic and excited, using upbeat language and positive expressions",
+        "sarcastic": "subtly humorous with a touch of irony and wit",
+        "poetic": "flowery and descriptive, using metaphors and vivid language",
+        "technical": "precise and technical, focusing on accuracy and specificity"
+    }
+    return predefined.get(tone.lower(), f"{tone} emotional style")
 
 def generate_tone_variation(text, tone):
+    """Generate a tone variation using the OpenRouter API"""
     try:
-        rate_limit = is_rate_limited()
-        if rate_limit:
-            return rate_limit
+        # Check rate limit
+        rate_limit_status = is_rate_limited()
+        if rate_limit_status:
+            return rate_limit_status
+        
+        tone_style = get_tone_description(tone)
+        
+        # Create system and user prompts
+        system_message = f"""You are expert at rewriting text in different tones.
+Your task is to rewrite the given text in a {tone} tone ({tone_style})."""
+
+        user_prompt = f"""Rewrite the text below with the emotion '{tone}' clearly expressed:
+Text:
+{text}"""
 
         response = requests.post(
             API_URL,
@@ -129,8 +99,8 @@ def generate_tone_variation(text, tone):
             json={
                 "model": MODEL,
                 "messages": [
-                    {"role": "system", "content": "Rewrite text in given tone."},
-                    {"role": "user", "content": f"Tone: {tone}\nText: {text}"}
+                    {"role": "system", "content": system_message},
+                    {"role": "user", "content": user_prompt}
                 ],
                 "temperature": 0.7,
                 "max_tokens": 500
@@ -138,30 +108,58 @@ def generate_tone_variation(text, tone):
             timeout=60
         ).json()
 
-        return response["choices"][0]["message"]["content"].strip()
+        if "error" in response:
+            return f"API Error: {response['error']['message']}"
+
+        return response['choices'][0]['message']['content'].strip()
 
     except Exception as e:
-        return str(e)
+        return f"Error: {str(e)}"
 
-# 🌟 Gradio UI
-with gr.Blocks(theme=gr.themes.Soft(), css=custom_css) as demo:
+# Create the Gradio interface
+with gr.Blocks(theme="soft") as demo:
     gr.Markdown(f"# {title}")
     gr.Markdown(description)
-
+    
     with gr.Row():
         with gr.Column():
-            text_input = gr.Textbox(label="Enter your text", lines=5)
-            tone_input = gr.Textbox(label="Emotion / Tone", lines=1)
-            generate_btn = gr.Button("Generate")
-
+            text_input = gr.Textbox(
+                label="Enter your text",
+                placeholder="Type or paste your text here...",
+                lines=5
+            )
+            tone_input = gr.Textbox(
+                label="Enter emotion / tone",
+                placeholder="e.g., happy, sad, romantic, angry, formal, relaxed",
+                lines=1
+            )
+            generate_btn = gr.Button("Generate Tone Variation")
+        
         with gr.Column():
-            output = gr.Textbox(label="Modified text", lines=5, interactive=False)
-
+            output = gr.Textbox(
+                label="Modified text",
+                lines=5,
+                interactive=False
+            )
+    
+    gr.Examples(
+        examples=[
+            ["I missed the bus.", "sad"],
+            ["The assignment is due tomorrow.", "anxious"],
+            ["I love this new cafe!", "happy"],
+            ["This is so boring.", "sarcastic"],
+            ["Let’s celebrate your success!", "joyful"],
+            ["Explain this seriously:", "serious"]
+        ],
+        inputs=[text_input, tone_input]
+    )
+    
     generate_btn.click(
-        generate_tone_variation,
+        fn=generate_tone_variation,
         inputs=[text_input, tone_input],
         outputs=output
     )
 
+# Launch the app
 if __name__ == "__main__":
     demo.launch(share=True)
