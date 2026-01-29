@@ -29,7 +29,7 @@ day_timestamps = deque()
 rate_limit_lock = Lock()
 
 # Set page title and description
-title = "AI Tone Generator"
+title = "Emotion Based Text Style Transfer"
 description = f"""
 <div style="text-align: center; max-width: 650px; margin: 0 auto;">
   <div>
