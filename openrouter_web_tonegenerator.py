@@ -17,7 +17,7 @@ HEADERS = {
     "X-Title": "OpenRouter Tone Generator",
     "Content-Type": "application/json"
 }
-MODEL = "mistralai/mistral-small-3.1-24b-instruct:free"
+MODEL = "arcee-ai/trinity-large-preview:free"
 
 # Rate limiter settings
 MAX_REQUESTS_PER_MINUTE = 10
