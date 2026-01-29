@@ -161,5 +161,5 @@ with gr.Blocks(theme="soft") as demo:
     )
 
 # Launch the app
-if _name_ == "_main_":
+if __name__ == "__main__":
     demo.launch(share=True)
