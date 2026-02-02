@@ -37,18 +37,13 @@ description = f"""
 </div>
 """
 
-# ================== CUSTOM CSS (LIGHT BLUE THEME) ==================
+# ================== CUSTOM CSS (FIXED & WORKING) ==================
 custom_css = """
-/* ===== Page Background ===== */
-body {
-    background: linear-gradient(135deg, #e6f2ff, #f2f9ff);
-    font-family: "Segoe UI", Roboto, Arial, sans-serif;
-}
-
-/* ===== Gradio Container ===== */
+/* ===== IMPORTANT: APPLY BACKGROUND TO GRADIO ROOT ===== */
 .gradio-container {
-    background: transparent !important;
-    max-width: 100%;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #e6f2ff, #f2f9ff) !important;
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
     padding: 30px;
 }
 
@@ -86,7 +81,7 @@ input:focus, textarea:focus {
     box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
 }
 
-/* ===== Buttons ===== */
+/* ===== Buttons (BLUE) ===== */
 button {
     background: linear-gradient(135deg, #4da3ff, #007bff);
     color: white;
