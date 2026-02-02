@@ -40,7 +40,7 @@ description = f"""
 """
 custom_css = """
 body {
-    background-color: #fdecef;
+    background-color: #fff0f5;
 }
 """
 
