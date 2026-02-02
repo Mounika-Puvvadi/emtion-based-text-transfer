@@ -37,11 +37,11 @@ description = f"""
 </div>
 """
 
-
+# ================== CUSTOM CSS (LIGHT BLUE THEME) ==================
 custom_css = """
 /* ===== Page Background ===== */
 body {
-    background: linear-gradient(135deg, #ff85c1, #ffd1e8);
+    background: linear-gradient(135deg, #e6f2ff, #f2f9ff);
     font-family: "Segoe UI", Roboto, Arial, sans-serif;
 }
 
@@ -57,38 +57,38 @@ body {
     background-color: #ffffff;
     border-radius: 16px;
     padding: 20px;
-    box-shadow: 0 10px 25px rgba(255, 20, 147, 0.25);
+    box-shadow: 0 10px 25px rgba(0, 123, 255, 0.2);
 }
 
 /* ===== Headings ===== */
 h1, h2, h3 {
     text-align: center;
-    color: #8b004f;
+    color: #003366;
 }
 
 /* ===== Labels ===== */
 label {
     font-weight: 600;
-    color: #8b004f;
+    color: #003366;
 }
 
 /* ===== Input Fields ===== */
 input, textarea {
     border-radius: 12px;
-    border: 1px solid #ff85c1;
+    border: 1px solid #90c2ff;
     padding: 10px;
     font-size: 14px;
 }
 
 input:focus, textarea:focus {
     outline: none;
-    border-color: #ff1493;
-    box-shadow: 0 0 0 2px rgba(255, 20, 147, 0.2);
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
 }
 
 /* ===== Buttons ===== */
 button {
-    background: linear-gradient(135deg, #ff4fa3, #ff1493);
+    background: linear-gradient(135deg, #4da3ff, #007bff);
     color: white;
     border-radius: 12px;
     font-weight: 600;
@@ -100,17 +100,18 @@ button {
 
 button:hover {
     transform: translateY(-1px);
-    background: linear-gradient(135deg, #ff1493, #e60073);
+    background: linear-gradient(135deg, #007bff, #0056b3);
 }
 
 /* ===== Examples Section ===== */
 .gr-examples {
     border-radius: 14px;
-    background: #fff5fa;
+    background: #f2f9ff;
     padding: 12px;
 }
 """
 
+# ================== RATE LIMIT ==================
 def is_rate_limited():
     with rate_limit_lock:
         now = time.time()
@@ -175,7 +176,7 @@ def generate_tone_variation(text, tone):
     except Exception as e:
         return f"Error: {e}"
 
-# Gradio Interface
+# ================== GRADIO UI ==================
 with gr.Blocks(theme=gr.themes.Soft(), css=custom_css) as demo:
     gr.Markdown(f"# {title}")
     gr.Markdown(description)
