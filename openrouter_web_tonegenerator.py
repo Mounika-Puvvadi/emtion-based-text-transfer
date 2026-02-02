@@ -28,7 +28,7 @@ minute_timestamps = deque()
 day_timestamps = deque()
 rate_limit_lock = Lock()
 
-# Page title & description
+# Page title and description
 title = "Emotion Based Text Style Transfer"
 description = f"""
 <div style="text-align: center; max-width: 650px; margin: 0 auto;">
@@ -36,48 +36,78 @@ description = f"""
   <p><small>Rate limit: {MAX_REQUESTS_PER_MINUTE}/min, {MAX_REQUESTS_PER_DAY}/day</small></p>
 </div>
 """
+
+# 🎨 FRONTEND STYLES (ATTACHED)
 custom_css = """
-/* Page background */
+/* ===== Page Background ===== */
 body {
-    background-color: #ff85c1;
+    background: linear-gradient(135deg, #ff85c1, #ffd1e8);
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
 }
 
-/* Main Gradio container */
+/* ===== Gradio Container ===== */
 .gradio-container {
-    background-color: #ff85c1 !important;
+    background: transparent !important;
     max-width: 100%;
+    padding: 30px;
 }
 
-/* Card style */
+/* ===== Card Layout ===== */
 .gr-box {
     background-color: #ffffff;
-    border-radius: 14px;
-    padding: 16px;
-    box-shadow: 0 8px 20px rgba(255, 20, 147, 0.25);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 10px 25px rgba(255, 20, 147, 0.25);
 }
 
-/* Buttons */
+/* ===== Headings ===== */
+h1, h2, h3 {
+    text-align: center;
+    color: #8b004f;
+}
+
+/* ===== Labels ===== */
+label {
+    font-weight: 600;
+    color: #8b004f;
+}
+
+/* ===== Input Fields ===== */
+input, textarea {
+    border-radius: 12px;
+    border: 1px solid #ff85c1;
+    padding: 10px;
+    font-size: 14px;
+}
+
+input:focus, textarea:focus {
+    outline: none;
+    border-color: #ff1493;
+    box-shadow: 0 0 0 2px rgba(255, 20, 147, 0.2);
+}
+
+/* ===== Buttons ===== */
 button {
     background: linear-gradient(135deg, #ff4fa3, #ff1493);
     color: white;
-    border-radius: 10px;
+    border-radius: 12px;
     font-weight: 600;
+    font-size: 15px;
+    padding: 10px 16px;
     border: none;
+    transition: all 0.2s ease-in-out;
 }
 
 button:hover {
+    transform: translateY(-1px);
     background: linear-gradient(135deg, #ff1493, #e60073);
 }
 
-/* Inputs */
-input, textarea {
-    border-radius: 10px;
-    border: 1px solid #ff85c1;
-}
-
-/* Labels */
-label {
-    font-weight: 600;
+/* ===== Examples Section ===== */
+.gr-examples {
+    border-radius: 14px;
+    background: #fff5fa;
+    padding: 12px;
 }
 """
 
@@ -140,12 +170,12 @@ def generate_tone_variation(text, tone):
         if "error" in response:
             return f"API Error: {response['error']['message']}"
 
-        return response['choices'][0]['message']['content'].strip()
+        return response["choices"][0]["message"]["content"].strip()
 
     except Exception as e:
         return f"Error: {e}"
 
-# Gradio UI
+# Gradio Interface
 with gr.Blocks(theme=gr.themes.Soft(), css=custom_css) as demo:
     gr.Markdown(f"# {title}")
     gr.Markdown(description)
@@ -176,11 +206,16 @@ with gr.Blocks(theme=gr.themes.Soft(), css=custom_css) as demo:
             ["The assignment is due tomorrow.", "anxious"],
             ["I love this new cafe!", "happy"],
             ["This is so boring.", "sarcastic"],
+            ["Let’s celebrate your success!", "joyful"],
         ],
         inputs=[text_input, tone_input]
     )
 
-    generate_btn.click(generate_tone_variation, [text_input, tone_input], output)
+    generate_btn.click(
+        fn=generate_tone_variation,
+        inputs=[text_input, tone_input],
+        outputs=output
+    )
 
 if __name__ == "__main__":
     demo.launch(share=True)
