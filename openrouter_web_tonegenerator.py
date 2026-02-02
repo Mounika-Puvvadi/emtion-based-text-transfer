@@ -37,7 +37,7 @@ description = f"""
 </div>
 """
 
-# 🎨 FRONTEND STYLES (ATTACHED)
+
 custom_css = """
 /* ===== Page Background ===== */
 body {
